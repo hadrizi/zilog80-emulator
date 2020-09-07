@@ -23,7 +23,9 @@ public:
 
 	void draw_ram(int, int, uint16_t, int, int);
 	void draw_cpu(int, int);
+	void draw_cpu_special(int ,int);
 	void draw_code(int, int, int);
+	void draw_stack(int, int);
 
 	bool OnUserCreate();
 	bool OnUserUpdate(float);

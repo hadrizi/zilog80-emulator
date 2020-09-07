@@ -20,32 +20,32 @@ public:
 	bool complete();
 public:
 	/*
-	FLAGS
-	Flag register(F) consists of the following bits
-	7 6 5 4 3 2 1 0
-	Z N H C 0 0 0 0
+		FLAGS
+		Flag register(F) consists of the following bits
+		7 6 5 4 3 2 1 0
+		Z N H C 0 0 0 0
 
-	Zero Flag (Z):
-	This bit is set when the result of a math operation
-	is zero or two values match when using the CP
-	instruction.
+		Zero Flag (Z):
+		This bit is set when the result of a math operation
+		is zero or two values match when using the CP
+		instruction.
 
-	Subtract Flag (N):
-	This bit is set if a subtraction was performed in the
-	last math instruction.
+		Subtract Flag (N):
+		This bit is set if a subtraction was performed in the
+		last math instruction.
 
-	Half Carry Flag (H):
-	This bit is set if a carry occurred from the lower
-	nibble in the last math operation.
+		Half Carry Flag (H):
+		This bit is set if a carry occurred from the lower
+		nibble in the last math operation.
 
-	Carry Flag (C):
-	This bit is set if a carry occurred from the last
-	math operation or if register A is the smaller value
-	when executing the CP instruction.
+		Carry Flag (C):
+		This bit is set if a carry occurred from the last
+		math operation or if register A is the smaller value
+		when executing the CP instruction.
 
-	As Game Boy CPU is not the exact replica of Zilog 80 CPU
-	it only has 4 flags, when Z80 had 8 of them
-*/
+		As Game Boy CPU is not the exact replica of Zilog 80 CPU
+		it only has 4 flags, when Z80 had 8 of them
+	*/
 	enum FLAGS
 	{
 		Z = (1 << 7), // Zero Flag
@@ -76,6 +76,32 @@ public:
 
 	Register PC = 0x0000; // Program Counter - points to the next instruction to be executed
 	Register SP = 0x0000; // Stack Pointer - points to the current stack position
+
+	// SPECIAL REGISTERS
+	/*
+		In most cases these boys are stored in the memory and they are not registers
+		but pointers to the specific memory address
+	*/
+	bool    PEI = false;  // Pending Enable Interupts
+	bool    PDI = false;  // Pending Disable Interupts
+	bool    IME = true;   // Interupt Master Enabled. This is one is neither register nor a memory pointer, 
+						  // it just says if registers are enabled or not
+	H_BYTE* IE = nullptr; // Interupt Enable. Points to $FFFF. Determines which interupts are allowed
+	H_BYTE* IF = nullptr; // Interupt Request. Points to $FF0F. Determines which interupts are requested
+	/*
+		Interrupts. 
+		Above registers were interupts related so below I list all interupts in their priority order
+
+		Bit 0: V-Blank Interupt
+		Bit 1: LCD Interupt
+		Bit 2: Timer Interupt
+		Bit 4: Joypad Interupt
+
+		The lower the bit the higher priority that interupt has,
+		so V-Blank has the highest priority meaning if this interupt and another interupt are both requested
+		in the Interupt Request Register then V-Blank will be serviced first.
+	*/
+
 private:
 	H_BYTE* fetched8_ptr  = nullptr; // This custom register is used by Data Functions to store 8-bit fetched data
 	H_WORD* fetched16_ptr = nullptr; // This custom register is used by Data Functions to store 16-bit fetched data
@@ -122,38 +148,41 @@ private:
 		TODO add templates
 	*/
 
-	void CPU_REG_LOAD  (Register&, H_WORD);			 // Loads data to register
-	void CPU_MEM_LOAD  (H_WORD, H_BYTE);				 // Loads data to memory
-	void CPU_MEM_LOAD  (Register&, H_BYTE);			 // Loads data to memory
-	void CPU_ACC_ADD   (H_BYTE);					     // Adds data to accumulator register(A)
-	void CPU_HL_ADD    (H_WORD);					     // Adds data to HL register(16-bit)
-	void CPU_SP_ADD	   (H_BYTE);					     // Adds data to SP register(8-bit)
-	void CPU_ACC_SUB   (H_BYTE, bool compare = false); // Subtracts data from accumulator register(A). It is also compare function
-	void CPU_ACC_AND   (H_BYTE);					     // Bitwise AND with accumulator register(A)
-	void CPU_ACC_OR    (H_BYTE);					     // Bitwise OR with accumulator register(A)
-	void CPU_ACC_XOR   (H_BYTE);					     // Bitwise XOR with accumulator register(A)
-	void CPU_ACC_FLIP  ();							 // Flips all bits of accumulator register(A)
-	void CPU_16REG_INC (H_WORD*);						 // Increments 16-bit register
-	void CPU_8REG_INC  (H_BYTE*);				         // Increments 8-bit register
-	void CPU_16REG_DEC (H_WORD*);						 // Decrements 16-bit register
-	void CPU_8REG_DEC  (H_BYTE*);				         // Decrements 8-bit register
-	void CPU_8REG_SWAP (H_BYTE*);				         // Swaps 8-bit register nibbles
-	void CPU_16REG_SWAP(H_WORD*);				         // Swaps 16-bit register nibbles. Not used
-	bool CPU_TEST_BIT  (H_BYTE,  size_t);		         // Checks if specific bit set
-	void CPU_SET_BIT   (H_BYTE*, size_t);		         // Sets specific bit
-	void CPU_RESET_BIT (H_BYTE*, size_t);		         // Resets specific bit
-	void CPU_8REG_RL   (H_BYTE*);				         // Rotates 8-bit register left
-	void CPU_8REG_RLC  (H_BYTE*);				         // Rotates 8-bit register left. Old bit 7 to C flag 
-	void CPU_8REG_RR   (H_BYTE*);				         // Rotates 8-bit register right
-	void CPU_8REG_RRC  (H_BYTE*);				         // Rotates 8-bit register right. Old bit 0 to C flag
-	void CPU_8REG_SLA  (H_BYTE*);				         // Shifts arithmetically 8-bit register left. Old bit 7 to C flag
-	void CPU_8REG_SRA  (H_BYTE*);				         // Shifts arithmetically 8-bit register right. Old bit 0 to C flag 
-	void CPU_8REG_SRL  (H_BYTE*);				         // Shifts logically 8-bit register right. MSB set to 0. Old bit 7 to C flag 
-	void CPU_PUSH_8    (H_BYTE);				         // Pushes 8-bit value onto stack. SP is decremented once 
-	void CPU_PUSH_16   (H_WORD);				         // Pushes 16-bit value onto stack. SP is decremented twice 
-	H_BYTE CPU_POP_8	   ();							 // Pops 8-bit value from stack. SP is incremented once
-	H_WORD CPU_POP_16	   ();							 // Pops 16-bit value from stack. SP is incremented twice 
-
+	void CPU_REG_LOAD   (Register&, H_WORD);			 // Loads data to register
+	void CPU_MEM_LOAD   (H_WORD, H_BYTE);				 // Loads data to memory
+	void CPU_MEM_LOAD   (Register&, H_BYTE);			 // Loads data to memory
+	void CPU_ACC_ADD    (H_BYTE);					     // Adds data to accumulator register(A)
+	void CPU_HL_ADD     (H_WORD);					     // Adds data to HL register(16-bit)
+	void CPU_SP_ADD	    (H_BYTE);					     // Adds data to SP register(8-bit)
+	void CPU_ACC_SUB    (H_BYTE, bool compare = false);  // Subtracts data from accumulator register(A). It is also compare function
+	void CPU_ACC_AND    (H_BYTE);					     // Bitwise AND with accumulator register(A)
+	void CPU_ACC_OR     (H_BYTE);					     // Bitwise OR with accumulator register(A)
+	void CPU_ACC_XOR    (H_BYTE);					     // Bitwise XOR with accumulator register(A)
+	void CPU_ACC_FLIP   ();								 // Flips all bits of accumulator register(A)
+	void CPU_16REG_INC  (H_WORD*);						 // Increments 16-bit register
+	void CPU_8REG_INC   (H_BYTE*);				         // Increments 8-bit register
+	void CPU_16REG_DEC  (H_WORD*);						 // Decrements 16-bit register
+	void CPU_8REG_DEC   (H_BYTE*);				         // Decrements 8-bit register
+	void CPU_8REG_SWAP  (H_BYTE*);				         // Swaps 8-bit register nibbles
+	void CPU_16REG_SWAP (H_WORD*);				         // Swaps 16-bit register nibbles. Not used
+	bool CPU_TEST_BIT   (H_BYTE,  size_t);		         // Checks if specific bit set
+	void CPU_SET_BIT    (H_BYTE*, size_t);		         // Sets specific bit
+	void CPU_RESET_BIT  (H_BYTE*, size_t);		         // Resets specific bit
+	void CPU_8REG_RL    (H_BYTE*);				         // Rotates 8-bit register left
+	void CPU_8REG_RLC   (H_BYTE*);				         // Rotates 8-bit register left. Old bit 7 to C flag 
+	void CPU_8REG_RR    (H_BYTE*);				         // Rotates 8-bit register right
+	void CPU_8REG_RRC   (H_BYTE*);				         // Rotates 8-bit register right. Old bit 0 to C flag
+	void CPU_8REG_SLA   (H_BYTE*);				         // Shifts arithmetically 8-bit register left. Old bit 7 to C flag
+	void CPU_8REG_SRA   (H_BYTE*);				         // Shifts arithmetically 8-bit register right. Old bit 0 to C flag 
+	void CPU_8REG_SRL   (H_BYTE*);				         // Shifts logically 8-bit register right. MSB set to 0. Old bit 7 to C flag 
+	void CPU_PUSH_8     (H_BYTE);				         // Pushes 8-bit value onto stack. SP is decremented once 
+	void CPU_PUSH_16    (H_WORD);				         // Pushes 16-bit value onto stack. SP is decremented twice 
+	H_BYTE CPU_POP_8    ();								 // Pops 8-bit value from stack. SP is incremented once
+	H_WORD CPU_POP_16   ();								 // Pops 16-bit value from stack. SP is incremented twice 
+	void CPU_SERVICE_INT(size_t);						 // Services interrupt. Actually sets PC to specific address
+	void CPU_PERFORM_INT();								 // Performs interupts. Checks if any interupts is requsted and services them if true
+	void CPU_REQUEST_INT(size_t);						 // Requests interup. Sets specific bit in IF
+	void CPU_PENDING_IME();								 // Checks pending IME switch
 
 	/* 
 		Data Functions

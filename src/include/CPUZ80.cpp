@@ -21,9 +21,9 @@ CPUZ80::CPUZ80()
 /*A0*/	{"AND",		&h::AND,	 &h::db,	  4}, {"AND",	  &h::AND,	   &h::dc,		 4}, {"AND",	  &h::AND,		  &h::dd,	    4}, {"AND",		&h::AND,	 &h::de,	   4}, {"AND",     &h::AND,		&h::dh,		  4}, {"AND",     &h::AND,	   &h::dl,	 4}, {"AND",     &h::AND,	  &h::mhl,	   8}, {"AND",     &h::AND,	    &h::da,	   4}, {"XOR",     &h::XOR,		&h::db,		 4}, {"XOR",	&h::XOR,	&h::dc,   4}, {"XOR",	  &h::XOR,	   &h::dd,		 4}, {"XOR",		&h::XOR,	&h::de,		 4}, {"XOR",    &h::XOR,	&h::dh,	      4}, {"XOR",	&h::XOR,   &h::dl,		 4}, {"XOR",   &h::XOR,  &h::mhl,	 8}, {"XOR",	 &h::XOR,    &h::da,	4}, /*A0*/
 /*B0*/	{"OR",		&h::OR,	     &h::db,	  4}, {"OR",      &h::OR,	   &h::dc,		 4}, {"OR",		  &h::OR,		  &h::dd,	    4}, {"OR",		&h::OR,	     &h::de,	   4}, {"OR",	   &h::OR,		&h::dh,		  4}, {"OR",      &h::OR,	   &h::dl,	 4}, {"OR",      &h::OR,	  &h::mhl,	   8}, {"OR",	   &h::OR,	    &h::da,	   4}, {"CP",      &h::CP,		&h::db,		 4}, {"CP",		&h::CP,		&h::dc,	  4}, {"CP",	  &h::CP,	   &h::dd,		 4}, {"CP",			&h::CP,		&h::de,	     4}, {"CP",		&h::CP,		&h::dh,		  4}, {"CP",	&h::CP,    &h::dl,		 4}, {"CP",	   &h::CP,   &h::mhl,	 8}, {"CP",		 &h::CP,	 &h::da,	4}, /*B0*/
 /*C0*/	{"RET NZ",	&h::RET_NZ,  &h::dnop,	  8}, {"POP",	  &h::POP,	   &h::dbc,		12}, {"JP NZ",	  &h::JPNZ,		  &h::dimm_16, 12}, {"JP",		&h::JP,	     &h::dimm_16, 12}, {"CALL NZ", &h::CALL_NZ,	&h::dimm_16, 12}, {"PUSH",    &h::PUSH,	   &h::dbc, 16}, {"ADD A",   &h::ADD_A,	  &h::dimm_8,  8}, {"RST $00", &h::RST_00,  &h::dnop, 32}, {"RET Z",   &h::RET_Z,	&h::dnop,	 8}, {"RET",	&h::RET,	&h::dnop, 8}, {"JP Z",	  &h::JPZ,	   &h::dimm_16, 12}, {"PREFIX $CB", &h::PREFIX, &h::dimm_8,  4}, {"CALL Z", &h::CALL_Z, &h::dimm_16, 12}, {"CALL",  &h::CALL,  &h::dimm_16, 12}, {"ADC A", &h::ADC,  &h::dimm_8, 8}, {"RST $08", &h::RST_08, &h::dnop, 32}, /*C0*/
-/*D0*/	{"RET NC",	&h::RET_NC,  &h::dnop,	  8}, {"POP",	  &h::POP,	   &h::dde,		12}, {"JP NC",	  &h::JPNC,		  &h::dimm_16, 12}, {"???",		&h::XXX,	 &h::dnop,	  00}, {"CALL NC", &h::CALL_NC,	&h::dimm_16, 12}, {"PUSH",    &h::PUSH,	   &h::de,	16}, {"SUB",     &h::SUB,	  &h::dimm_8,  8}, {"RST $10", &h::RST_10,  &h::dnop, 32}, {"RET C",   &h::RET_C,	&h::dnop,	 8}, {"RETI",	&h::RETI,	&h::dnop, 8}, {"JP D",	  &h::JPC,	   &h::dimm_16, 12}, {"???",		&h::XXX,	&h::dnop,   00}, {"CALL C", &h::CALL_C, &h::dimm_16, 12}, {"???",	&h::XXX,   &h::dnop,	00}, {"SBC A", &h::SBC,  &h::dimm_8, 8}, {"RST $18", &h::RST_18, &h::dnop, 32}, /*D0*/
+/*D0*/	{"RET NC",	&h::RET_NC,  &h::dnop,	  8}, {"POP",	  &h::POP,	   &h::dde,		12}, {"JP NC",	  &h::JPNC,		  &h::dimm_16, 12}, {"???",		&h::XXX,	 &h::dnop,	  00}, {"CALL NC", &h::CALL_NC,	&h::dimm_16, 12}, {"PUSH",    &h::PUSH,	   &h::dde,	16}, {"SUB",     &h::SUB,	  &h::dimm_8,  8}, {"RST $10", &h::RST_10,  &h::dnop, 32}, {"RET C",   &h::RET_C,	&h::dnop,	 8}, {"RETI",	&h::RETI,	&h::dnop, 8}, {"JP D",	  &h::JPC,	   &h::dimm_16, 12}, {"???",		&h::XXX,	&h::dnop,   00}, {"CALL C", &h::CALL_C, &h::dimm_16, 12}, {"???",	&h::XXX,   &h::dnop,	00}, {"SBC A", &h::SBC,  &h::dimm_8, 8}, {"RST $18", &h::RST_18, &h::dnop, 32}, /*D0*/
 /*E0*/	{"LDH (n)", &h::LDH_M,	 &h::da,	 12}, {"POP",	  &h::POP,	   &h::dhl,		12}, {"LD (C)",	  &h::LD_M_FFFOC, &h::da,	    8}, {"???",		&h::XXX,	 &h::dnop,	  00}, {"???",     &h::XXX,		&h::dnop,	 00}, {"PUSH",    &h::PUSH,	   &h::dhl, 16}, {"AND",     &h::AND,	  &h::dimm_8,  8}, {"RST $20", &h::RST_20,  &h::dnop, 32}, {"ADD SP",  &h::ADD_SP,	&h::dimm_8, 16}, {"JP",		&h::JP,		&h::dhl,  4}, {"LD",	  &h::LD_M_NN, &h::da,		16}, {"???",		&h::XXX,	&h::dnop,   00}, {"???",    &h::XXX,	&h::dnop,	 00}, {"???",	&h::XXX,   &h::dnop, 	00}, {"XOR",   &h::XOR,  &h::dimm_8, 8}, {"RST $28", &h::RST_28, &h::dnop, 32}, /*E0*/
-/*F0*/	{"LDH A",	&h::LD_A,	 &h::mFF00n, 12}, {"POP",	  &h::POP,	   &h::daf,		12}, {"LD A",	  &h::LD_A,		  &h::mFF00c,   8}, {"DI",		&h::DI,	     &h::dnop,	   4}, {"???",     &h::XXX,		&h::dnop,	 00}, {"PUSH",    &h::PUSH,	   &h::daf, 16}, {"OR",      &h::OR,	  &h::dimm_8,  8}, {"RST $30", &h::RST_30,  &h::dnop, 32}, {"LDHL SP", &h::LDHL,	&h::dspn,	12}, {"LD SP",	&h::LD_SP,  &h::dhl,  8}, {"LD A",	  &h::LD_A,	   &h::mimm_16, 16}, {"EI",			&h::EI,		&h::dnop,    4}, {"???",    &h::XXX,	&h::dnop,	 00}, {"???",	&h::XXX,   &h::dnop,	00}, {"CP",	   &h::CP,   &h::dimm_8, 8}, {"RST $38", &h::RST_38, &h::dnop, 32}  /*F0*/
+/*F0*/	{"LDH A",	&h::LD_A,	 &h::mFF00n, 12}, {"POP",	  &h::POP,	   &h::daf,		12}, {"LD A",	  &h::LD_A,		  &h::mFF00c,   8}, {"DI",		&h::DI,	     &h::dnop,	   4}, {"???",     &h::XXX,		&h::dnop,	 00}, {"PUSH",    &h::PUSH,	   &h::daf, 16}, {"OR",      &h::OR,	  &h::dimm_8,  8}, {"RST $30", &h::RST_30,  &h::dnop, 32}, {"LDHL",    &h::LDHL,	&h::dspn,	12}, {"LD SP",	&h::LD_SP,  &h::dhl,  8}, {"LD A",	  &h::LD_A,	   &h::mimm_16, 16}, {"EI",			&h::EI,		&h::dnop,    4}, {"???",    &h::XXX,	&h::dnop,	 00}, {"???",	&h::XXX,   &h::dnop,	00}, {"CP",	   &h::CP,   &h::dimm_8, 8}, {"RST $38", &h::RST_38, &h::dnop, 32}  /*F0*/
 	};	
 	prefixes =
 	{
@@ -45,8 +45,6 @@ CPUZ80::CPUZ80()
 /*E0*/	{"SET",  &h::SET_B, &h::b4, 8}, {"SET",  &h::SET_C, &h::b4, 8}, {"SET",  &h::SET_D, &h::b4, 8}, {"SET",  &h::SET_E, &h::b4, 8}, {"SET",  &h::SET_H, &h::b4, 8}, {"SET",  &h::SET_L, &h::b4, 8}, {"SET",  &h::SET_M_HL, &h::b4,  16}, {"SET",  &h::SET_A, &h::b4, 8}, {"SET", &h::SET_B, &h::b5, 8}, {"SET", &h::SET_C, &h::b5, 8}, {"SET", &h::SET_D, &h::b5, 8}, {"SET", &h::SET_E, &h::b5, 8}, {"SET", &h::SET_H, &h::b5, 8}, {"SET", &h::SET_L, &h::b5, 8}, {"SET", &h::SET_M_HL, &h::b5,  16}, {"SET", &h::SET_A, &h::b5, 8},
 /*F0*/	{"SET",  &h::SET_B, &h::b6, 8}, {"SET",  &h::SET_C, &h::b6, 8}, {"SET",  &h::SET_D, &h::b6, 8}, {"SET",  &h::SET_E, &h::b6, 8}, {"SET",  &h::SET_H, &h::b6, 8}, {"SET",  &h::SET_L, &h::b6, 8}, {"SET",  &h::SET_M_HL, &h::b6,  16}, {"SET",  &h::SET_A, &h::b6, 8}, {"SET", &h::SET_B, &h::b7, 8}, {"SET", &h::SET_C, &h::b7, 8}, {"SET", &h::SET_D, &h::b7, 8}, {"SET", &h::SET_E, &h::b7, 8}, {"SET", &h::SET_H, &h::b7, 8}, {"SET", &h::SET_L, &h::b7, 8}, {"SET", &h::SET_M_HL, &h::b7,  16}, {"SET", &h::SET_A, &h::b7, 8}
 	};
-
-	reset();
 }
 
 CPUZ80::~CPUZ80()
@@ -226,18 +224,25 @@ H_BYTE* CPUZ80::read_ptr(Register addr)
 
 void CPUZ80::reset()
 {
+	gb->write(0xFFFF, 0x00);
+
 	//AF = 0x01B0;
 	//BC = 0x0013;
 	//DE = 0x00D8;
 	//HL = 0x014D;
-	AF    = 0x0000;
-	AF.lo = 0xB0;
+	AF    = 0x00B0;
 	BC    = 0x0000;
 	DE    = 0x0000;
 	//HL    = 0xCAFE;
 	HL    = 0x0000;
 	SP    = 0xFFFF;
 	PC    = 0x0100;
+
+	IME = true;
+	PEI = false;
+	PDI = false;
+	IE = gb->read_ptr(0xFFFF);
+	IF = gb->read_ptr(0xFF0F);
 }
 
 bool CPUZ80::complete()
@@ -250,6 +255,7 @@ void CPUZ80::clock()
 {
 	if (cycles == 0)
 	{
+		CPU_PENDING_IME();
 		opcode = read(PC);
 		PC++;
 
@@ -257,10 +263,12 @@ void CPUZ80::clock()
 
 		(this->*opcodes[opcode].data_func)();
 		(this->*opcodes[opcode].op_func)();
-	}
+	}	
 
 	clock_count++;
 	cycles--;
+
+	CPU_PERFORM_INT();
 }
 
 // Returns current F register bit status
@@ -465,7 +473,7 @@ void CPUZ80::mFF00n()
 void CPUZ80::dimm_16()
 {
 	temp = ((read(PC+1) << 8) | read(PC));
-	inc_PC();
+	inc_PC(2);
 }
 
 // AF Register Data Function
@@ -826,6 +834,58 @@ H_WORD CPUZ80::CPU_POP_16()
 	return data;
 }
 
+void CPUZ80::CPU_SERVICE_INT(size_t i)
+{
+	CPU_PUSH_16(PC.reg);
+
+	switch (i)
+	{
+	case 0: PC = 0x0040; break;
+	case 1: PC = 0x0048; break;
+	case 2: PC = 0x0050; break;
+	case 3: PC = 0x0060; break;
+	default:
+		break;
+	}
+
+	IME = false;
+	CPU_RESET_BIT(IF, i);
+}
+
+void CPUZ80::CPU_PERFORM_INT()
+{
+	// We check if interupts are allowed globally
+	if (IME)
+	{
+		for (int bit = 0; bit <= 4; bit++)
+		{
+			// Here we check if specific interup is allowed and requsted
+			if (CPU_TEST_BIT(*IF, bit) && CPU_TEST_BIT(*IE, bit))
+				CPU_SERVICE_INT(bit);
+		}
+	}
+}
+
+void CPUZ80::CPU_PENDING_IME()
+{
+	if (PEI && (read(PC - 0x0001) == 0xFB))
+	{
+		IME = true;
+		PEI = false;
+	}
+
+	if (PDI && (read(PC - 0x0001) == 0xF3))
+	{
+		IME = false;
+		PDI = false;
+	}
+}
+
+void CPUZ80::CPU_REQUEST_INT(size_t bit)
+{
+	CPU_SET_BIT(IF, bit);
+}
+
 // 8-BIT LOAD FUNCTIONS
 // These functions put some 8-bit data to some source
 // Data is taken from Data Registers(feteched8_ptr, fetched16_ptr or temp)
@@ -900,9 +960,25 @@ void CPUZ80::LD_M_DE()
 // Loads fetched data to DE memory address
 void CPUZ80::LD_M_NN()
 {
-	H_WORD nn = ((read(PC + 1) << 8) | read(PC));
-	CPU_MEM_LOAD(nn, *fetched8_ptr);
-	inc_PC(2);
+	// another one hehe
+	if (opcode == 0x08)
+	{
+		H_BYTE lo = (*fetched16_ptr) & 0x00FF;
+		H_BYTE hi = ((*fetched16_ptr) & 0xFF00) >> 8;
+
+		H_WORD nn = ((read(PC + 1) << 8) | read(PC));
+		CPU_MEM_LOAD(nn, lo);
+		nn++;
+		CPU_MEM_LOAD(nn, hi);
+		inc_PC(2);
+	}
+	else
+	{
+		H_WORD nn = ((read(PC + 1) << 8) | read(PC));
+		CPU_MEM_LOAD(nn, *fetched8_ptr);
+		inc_PC(2);
+	}
+
 }
 
 // Loads fetched data to FF00+C memory address
@@ -1159,16 +1235,18 @@ void CPUZ80::STOP()
 	// TODO
 }
 
-// Not yet implemented
+// Disables interupts after next instruction is executed
+// Sets IME to true
 void CPUZ80::DI()
 {
-	// TODO
+	PDI = true;
 }
 
-// Not yet implemented
+// Enables interupts after next instruction is executed
+// Sets IME to true
 void CPUZ80::EI()
 {
-	// TODO
+	PEI = true;
 }
 
 // Rotates A left
@@ -1617,7 +1695,7 @@ void CPUZ80::RET_C()
 void CPUZ80::RETI()
 {
 	PC = CPU_POP_16();
-	// TODO interrupts
+	IME = true;
 }
 
 // Unknown function

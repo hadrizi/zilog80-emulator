@@ -67,6 +67,30 @@ void Debugger::draw_cpu(int x, int y)
 	//DrawString(x, y + 70, "STACK POINTER: $" + hex(gb->cpu.SP.reg, 4));
 }
 
+void Debugger::draw_cpu_special(int x, int y)
+{
+	if (gb->cpu.PEI)
+		DrawString(x, y, "Pending Enable Interupt");
+	else if (gb->cpu.PDI)
+		DrawString(x, y, "Pending Disable Interupt");
+	else
+		DrawString(x, y, "");
+
+	std::string IME = (gb->cpu.IME ? "TRUE" : "FALSE");
+	DrawString(x,       y + 10, "IME: " + IME);
+	DrawString(x,       y + 20, "ALLOWED:");
+	DrawString(x + 86,  y + 20, "V", (*gb->cpu.IE) & 0x01 ? olc::BLUE : olc::RED);
+	DrawString(x + 102, y + 20, "L", (*gb->cpu.IE) & 0x02 ? olc::BLUE : olc::RED);
+	DrawString(x + 118, y + 20, "T", (*gb->cpu.IE) & 0x04 ? olc::BLUE : olc::RED);
+	DrawString(x + 134, y + 20, "C", (*gb->cpu.IE) & 0x08 ? olc::BLUE : olc::RED);
+
+	DrawString(x,      y + 30, "REQUESTED:");
+	DrawString(x + 86, y + 30, "V", (*gb->cpu.IF) & 0x01 ? olc::BLUE : olc::RED);
+	DrawString(x + 102, y + 30, "L", (*gb->cpu.IF) & 0x02 ? olc::BLUE : olc::RED);
+	DrawString(x + 118, y + 30, "T", (*gb->cpu.IF) & 0x04 ? olc::BLUE : olc::RED);
+	DrawString(x + 134, y + 30, "C", (*gb->cpu.IF) & 0x08 ? olc::BLUE : olc::RED);
+}
+
 void Debugger::draw_code(int x, int y, int lines)
 {
 	auto it_a = map_asm.find(gb->cpu.PC.reg);
@@ -95,10 +119,35 @@ void Debugger::draw_code(int x, int y, int lines)
 	}
 }
 
+void Debugger::draw_stack(int x, int y)
+{
+	DrawString(x, y, "STACK");
+	H_WORD old_SP = gb->cpu.SP.reg;
+
+	H_BYTE lo = gb->read(old_SP + 1);
+	H_BYTE hi = gb->read(old_SP + 2);
+	DrawString(x, y + 10, "+0 $" + hex(hi, 2) + hex(lo, 2));
+
+	old_SP += 2;
+	lo = gb->read(old_SP + 1);
+	hi = gb->read(old_SP + 2);
+	DrawString(x, y + 20, "+2 $" + hex(hi, 2) + hex(lo, 2));
+
+	old_SP += 2;
+	lo = gb->read(old_SP + 1);
+	hi = gb->read(old_SP + 2);
+	DrawString(x, y + 30, "+4 $" + hex(hi, 2) + hex(lo, 2));
+
+	old_SP += 2;
+	lo = gb->read(old_SP + 1);
+	hi = gb->read(old_SP + 2);
+	DrawString(x, y + 40, "+6 $" + hex(hi, 2) + hex(lo, 2));
+}
+
 bool Debugger::OnUserCreate()
 {
 	std::stringstream ss;
-	ss << "3E 13 EA 00 FF 3E BB EA 01 FF 7A 86 4F 23 78 8E 47 2B";
+	ss << "01 34 12 C5 F1 01 78 56 C5 D1";
 	uint16_t offset = 0x0100;
 	while (!ss.eof())
 	{
@@ -130,9 +179,11 @@ bool Debugger::OnUserUpdate(float fElapsedTime)
 	draw_ram(2, 2, 0xFF00, 16, 16);
 	draw_ram(2, 182, 0x0100, 16, 16);
 	draw_cpu(448, 2);
+	draw_cpu_special(2, 341);
 	draw_code(448, 82, 25);
+	draw_stack(615, 82);
 
-	DrawString(10, 370, "SPACE = Step Instruction    R = RESET");
+	DrawString(2, 400, "SPACE = Step Instruction    R = RESET");
 
 	return true;
 }
