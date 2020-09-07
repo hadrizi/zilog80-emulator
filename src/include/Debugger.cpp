@@ -27,7 +27,7 @@ void Debugger::draw_ram(int x, int y, uint16_t addr, int rows, int columns)
 
 void Debugger::draw_cpu(int x, int y)
 {
-	DrawString(x, y, "FLAGS:", olc::WHITE);
+	DrawString(x,       y, "FLAGS:", olc::WHITE);
 	DrawString(x + 64,  y, "Z", gb->cpu.AF.lo & CPUZ80::Z ? olc::BLUE : olc::RED);
 	DrawString(x + 80,  y, "N", gb->cpu.AF.lo & CPUZ80::N ? olc::BLUE : olc::RED);
 	DrawString(x + 96,  y, "H", gb->cpu.AF.lo & CPUZ80::H ? olc::BLUE : olc::RED);
@@ -82,13 +82,30 @@ void Debugger::draw_cpu_special(int x, int y)
 	DrawString(x + 86,  y + 20, "V", (*gb->cpu.IE) & 0x01 ? olc::BLUE : olc::RED);
 	DrawString(x + 102, y + 20, "L", (*gb->cpu.IE) & 0x02 ? olc::BLUE : olc::RED);
 	DrawString(x + 118, y + 20, "T", (*gb->cpu.IE) & 0x04 ? olc::BLUE : olc::RED);
-	DrawString(x + 134, y + 20, "C", (*gb->cpu.IE) & 0x08 ? olc::BLUE : olc::RED);
+	DrawString(x + 134, y + 20, "S", (*gb->cpu.IE) & 0x08 ? olc::BLUE : olc::RED);
+	DrawString(x + 150, y + 20, "J", (*gb->cpu.IE) & 0x10 ? olc::BLUE : olc::RED);
 
-	DrawString(x,      y + 30, "REQUESTED:");
-	DrawString(x + 86, y + 30, "V", (*gb->cpu.IF) & 0x01 ? olc::BLUE : olc::RED);
+	DrawString(x,      y + 30,  "REQUESTED:");
+	DrawString(x + 86, y + 30,  "V", (*gb->cpu.IF) & 0x01 ? olc::BLUE : olc::RED);
 	DrawString(x + 102, y + 30, "L", (*gb->cpu.IF) & 0x02 ? olc::BLUE : olc::RED);
 	DrawString(x + 118, y + 30, "T", (*gb->cpu.IF) & 0x04 ? olc::BLUE : olc::RED);
-	DrawString(x + 134, y + 30, "C", (*gb->cpu.IF) & 0x08 ? olc::BLUE : olc::RED);
+	DrawString(x + 134, y + 30, "S", (*gb->cpu.IF) & 0x08 ? olc::BLUE : olc::RED);
+	DrawString(x + 150, y + 30, "J", (*gb->cpu.IF) & 0x10 ? olc::BLUE : olc::RED);
+
+	DrawString(x, y + 40, "TIMER:", ((*gb->cpu.clock.TAC) & 0x04) > 0 ? olc::WHITE : olc::RED);
+	DrawString(x + 86, y + 40, "$" + hex((*gb->cpu.clock.TIMA), 2));
+
+	DrawString(x, y + 50, "FREQUENCY:");
+	switch ((*gb->cpu.clock.TAC) & 0x03)
+	{
+	case 0x00: DrawString(x + 86, y + 50, "1024"); break;
+	case 0x01: DrawString(x + 86, y + 50, "16"); break;
+	case 0x02: DrawString(x + 86, y + 50, "64"); break;
+	case 0x03: DrawString(x + 86, y + 50, "256"); break;
+	default:
+		break;
+	}
+
 }
 
 void Debugger::draw_code(int x, int y, int lines)
@@ -146,6 +163,8 @@ void Debugger::draw_stack(int x, int y)
 
 bool Debugger::OnUserCreate()
 {
+	gb->cpu.reset();
+
 	std::stringstream ss;
 	ss << "01 34 12 C5 F1 01 78 56 C5 D1";
 	uint16_t offset = 0x0100;
@@ -155,9 +174,8 @@ bool Debugger::OnUserCreate()
 		ss >> b;
 		gb->m_memory[offset++] = (uint8_t)std::stoul(b, nullptr, 16);
 	}
-
+	
 	map_asm = gb->cpu.disassemble(0x0000, 0xFFFF);
-	gb->cpu.reset();
 	return true;
 }
 
@@ -169,7 +187,7 @@ bool Debugger::OnUserUpdate(float fElapsedTime)
 	{
 		do
 		{
-			gb->cpu.clock();
+			gb->cpu.cpu_clock();
 		} while (!gb->cpu.complete());
 	}
 
@@ -183,7 +201,7 @@ bool Debugger::OnUserUpdate(float fElapsedTime)
 	draw_code(448, 82, 25);
 	draw_stack(615, 82);
 
-	DrawString(2, 400, "SPACE = Step Instruction    R = RESET");
+	DrawString(2, 470, "SPACE = Step Instruction    R = RESET");
 
 	return true;
 }

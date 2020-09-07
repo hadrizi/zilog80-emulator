@@ -222,9 +222,21 @@ H_BYTE* CPUZ80::read_ptr(Register addr)
 	return gb->read_ptr(addr.reg);
 }
 
+void CPUZ80::timer_update()
+{
+	timer_count++;
+	CPU_TIMER_INCREMENT();
+}
+
 void CPUZ80::reset()
 {
-	gb->write(0xFFFF, 0x00);
+	write(0xFF05, 0x00);
+	write(0xFF06, 0x00);
+	write(0xFF07, 0x00);
+	write(0xFFFF, 0x00);
+
+	//write(0x0060, 0xD9);
+	//write(0x0040, 0xD9);
 
 	//AF = 0x01B0;
 	//BC = 0x0013;
@@ -241,8 +253,14 @@ void CPUZ80::reset()
 	IME = true;
 	PEI = false;
 	PDI = false;
-	IE = gb->read_ptr(0xFFFF);
-	IF = gb->read_ptr(0xFF0F);
+	IE = read_ptr(0xFFFF);
+	IF = read_ptr(0xFF0F);
+
+	clock.TIMA = read_ptr(0xFF05);
+	clock.TMA  = read_ptr(0xFF06);
+	clock.TAC  = read_ptr(0xFF07);
+
+	CPU_TIMER_FREQ();
 }
 
 bool CPUZ80::complete()
@@ -251,7 +269,7 @@ bool CPUZ80::complete()
 }
 
 // One clock cycle of CPU
-void CPUZ80::clock()
+void CPUZ80::cpu_clock()
 {
 	if (cycles == 0)
 	{
@@ -269,6 +287,7 @@ void CPUZ80::clock()
 	cycles--;
 
 	CPU_PERFORM_INT();
+	timer_update();
 }
 
 // Returns current F register bit status
@@ -817,8 +836,17 @@ void CPUZ80::CPU_PUSH_16(H_WORD data)
 	H_BYTE lo = (data & 0x00FF);
 	write(SP - 1, lo);
 
+	std::cout << (int)hi << (int)lo << " " << (int) data << std::endl;
+
 	dec_SP(2);
 }
+
+void CPUZ80::CPU_CALL(H_WORD addr)
+{
+	CPU_PUSH_16(PC.reg);
+	PC = addr;
+}
+
 
 H_BYTE CPUZ80::CPU_POP_8()
 {
@@ -834,24 +862,6 @@ H_WORD CPUZ80::CPU_POP_16()
 	return data;
 }
 
-void CPUZ80::CPU_SERVICE_INT(size_t i)
-{
-	CPU_PUSH_16(PC.reg);
-
-	switch (i)
-	{
-	case 0: PC = 0x0040; break;
-	case 1: PC = 0x0048; break;
-	case 2: PC = 0x0050; break;
-	case 3: PC = 0x0060; break;
-	default:
-		break;
-	}
-
-	IME = false;
-	CPU_RESET_BIT(IF, i);
-}
-
 void CPUZ80::CPU_PERFORM_INT()
 {
 	// We check if interupts are allowed globally
@@ -861,7 +871,12 @@ void CPUZ80::CPU_PERFORM_INT()
 		{
 			// Here we check if specific interup is allowed and requsted
 			if (CPU_TEST_BIT(*IF, bit) && CPU_TEST_BIT(*IE, bit))
-				CPU_SERVICE_INT(bit);
+			{
+				IME = false;
+
+				CPU_CALL(0x0040 + (bit * 8));
+				CPU_RESET_BIT(IF, bit);
+			}
 		}
 	}
 }
@@ -884,6 +899,56 @@ void CPUZ80::CPU_PENDING_IME()
 void CPUZ80::CPU_REQUEST_INT(size_t bit)
 {
 	CPU_SET_BIT(IF, bit);
+}
+
+void CPUZ80::CPU_CLOCK_INCREMENT()
+{
+	CPU_TIMER_CHECK();
+}
+
+void CPUZ80::CPU_TIMER_CHECK()
+{
+	if (clock.overflow)
+	{
+		CPU_REQUEST_INT(INT_Timer);
+		clock.overflow = false;
+
+		clock.reset();
+	}
+}
+
+H_BYTE CPUZ80::CPU_TIMER_BIT()
+{
+	return (*clock.TAC) & 0x03;
+}
+
+void CPUZ80::CPU_TIMER_FREQ()
+{
+	switch (CPU_TIMER_BIT())
+	{
+	case 0x00: clock.frequency = 1024; break;
+	case 0x01: clock.frequency = 16;   break;
+	case 0x02: clock.frequency = 64;   break;
+	case 0x03: clock.frequency = 256;  break;
+	default:
+		break;
+	}
+}
+
+void CPUZ80::CPU_TIMER_INCREMENT()
+{
+	if ((*clock.TAC) & 0x04)
+	{
+		if (timer_count >= clock.frequency)
+		{
+			clock.overflow = (*clock.TIMA) == 0xFF;
+
+			(*clock.TIMA) += 1;
+			timer_count = 0;
+
+			CPU_TIMER_CHECK();
+		}
+	}
 }
 
 // 8-BIT LOAD FUNCTIONS
@@ -1540,8 +1605,7 @@ void CPUZ80::JRC()
 // Pushes PC to the stack;
 void CPUZ80::CALL()
 {
-	CPU_PUSH_16(PC.reg);
-	PC = temp;
+	CPU_CALL(temp);
 }
 
 // Jumps to the fetched data if Z is reset

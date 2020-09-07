@@ -3,11 +3,12 @@
 GameBoy::GameBoy()
 {
 	cpu.connect_device(this);
+	cpu.reset();
+
 	cartrdige_loader.connect_device(this);
 	screen.connect_device(this);
 	debugger.connect_device(this);
 
-	cpu.reset();
 	screen.flush();
 
 	for (auto& i : m_memory) i = 0x00;

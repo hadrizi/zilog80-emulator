@@ -1,4 +1,6 @@
 #pragma once
+#define CLOCKSPEED 4194304 // 4.194304 MHz as stated in the technical documentaion
+
 #include <vector>
 #include <string>
 #include <map>
@@ -14,7 +16,7 @@ public:
 	~CPUZ80();
 
 	inline void connect_device(GameBoy* instance) { gb = instance; };
-	void clock();
+	void cpu_clock();
 	std::map<H_WORD, std::string> disassemble(H_WORD, H_WORD);
 	void reset(); // Resets CPU according to documentation
 	bool complete();
@@ -82,14 +84,8 @@ public:
 		In most cases these boys are stored in the memory and they are not registers
 		but pointers to the specific memory address
 	*/
-	bool    PEI = false;  // Pending Enable Interupts
-	bool    PDI = false;  // Pending Disable Interupts
-	bool    IME = true;   // Interupt Master Enabled. This is one is neither register nor a memory pointer, 
-						  // it just says if registers are enabled or not
-	H_BYTE* IE = nullptr; // Interupt Enable. Points to $FFFF. Determines which interupts are allowed
-	H_BYTE* IF = nullptr; // Interupt Request. Points to $FF0F. Determines which interupts are requested
 	/*
-		Interrupts. 
+		Interrupts.
 		Above registers were interupts related so below I list all interupts in their priority order
 
 		Bit 0: V-Blank Interupt
@@ -101,14 +97,45 @@ public:
 		so V-Blank has the highest priority meaning if this interupt and another interupt are both requested
 		in the Interupt Request Register then V-Blank will be serviced first.
 	*/
+	bool    PEI = false;  // Pending Enable Interupts
+	bool    PDI = false;  // Pending Disable Interupts
+	bool    IME = true;   // Interupt Master Enabled. This is one is neither register nor a memory pointer, 
+						  // it just says if registers are enabled or not
+	H_BYTE* IE = nullptr; // Interupt Enable. Points to $FFFF. Determines which interupts are allowed
+	H_BYTE* IF = nullptr; // Interupt Request. Points to $FF0F. Determines which interupts are requested
+	/*
+		Timer
+	*/
+	struct
+	{
+		H_BYTE* TIMA = nullptr; // FF05
+		H_BYTE* TMA = nullptr; // FF06
+		H_BYTE* TAC = nullptr; // FF07
+		bool overflow = false;
+		int frequency = 1024;
+
+		inline void reset() { (*TIMA) = (*TMA); }
+	} clock;
+
 
 private:
+	// Interrupt bits
+	enum
+	{
+		INT_VBlank = 0x01, // Bit 0
+		INT_LCD    = 0x02, // Bit 1
+		INT_Timer  = 0x04, // Bit 2
+		INT_Serial = 0x08, // Bit 3
+		INT_Joypad = 0x10, // Bit 4
+	};
+
 	H_BYTE* fetched8_ptr  = nullptr; // This custom register is used by Data Functions to store 8-bit fetched data
 	H_WORD* fetched16_ptr = nullptr; // This custom register is used by Data Functions to store 16-bit fetched data
-	H_WORD  temp		    = 0x0000;  // A buffer register. Just for case
+	H_WORD  temp		  = 0x0000;  // A buffer register. Just for case
 	H_BYTE  opcode        = 0x00;    // Instruction byte
-	H_BYTE  cycles        = 0;	   // Counts how many cycles has remaining
+	H_BYTE  cycles        = 0;	     // Counts how many cycles has remaining
 	H_DWORD clock_count   = 0;       // Counts how many cycles have passed. Emulator doesn't use it's only foe debugging
+	int     timer_count   = 0;       // Counts how many cycles have passed. Used to proceed timer
 
 	// GameBoy instance
 	GameBoy* gb = nullptr;
@@ -134,6 +161,8 @@ private:
 	H_BYTE get_flag(FLAGS);
 	void set_flag(FLAGS, bool);
 	void reset_flag(FLAGS);
+
+	void timer_update();
 
 	inline void inc_PC(int k = 1) { PC = PC + 1 * k; }
 	inline void inc_SP(int k = 1) { SP = SP + 1 * k; }
@@ -177,12 +206,17 @@ private:
 	void CPU_8REG_SRL   (H_BYTE*);				         // Shifts logically 8-bit register right. MSB set to 0. Old bit 7 to C flag 
 	void CPU_PUSH_8     (H_BYTE);				         // Pushes 8-bit value onto stack. SP is decremented once 
 	void CPU_PUSH_16    (H_WORD);				         // Pushes 16-bit value onto stack. SP is decremented twice 
+	void CPU_CALL	    (H_WORD);						 // Pushes PC to the stack. And jumps to specific address 
 	H_BYTE CPU_POP_8    ();								 // Pops 8-bit value from stack. SP is incremented once
 	H_WORD CPU_POP_16   ();								 // Pops 16-bit value from stack. SP is incremented twice 
-	void CPU_SERVICE_INT(size_t);						 // Services interrupt. Actually sets PC to specific address
 	void CPU_PERFORM_INT();								 // Performs interupts. Checks if any interupts is requsted and services them if true
 	void CPU_REQUEST_INT(size_t);						 // Requests interup. Sets specific bit in IF
 	void CPU_PENDING_IME();								 // Checks pending IME switch
+	void CPU_CLOCK_INCREMENT();							 // Increments clock
+	void CPU_TIMER_INCREMENT();							 // Increments timer
+	void CPU_TIMER_CHECK();							     // Checks timer for overflow
+	H_BYTE CPU_TIMER_BIT();							     // Returns TAC frequency bit
+	void CPU_TIMER_FREQ();								 // Sets timer frequency
 
 	/* 
 		Data Functions
