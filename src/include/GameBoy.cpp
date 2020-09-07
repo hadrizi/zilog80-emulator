@@ -23,6 +23,8 @@ void GameBoy::write(H_WORD addr, H_BYTE data)
 {
 	if (addr >= 0x0000 && addr <= 0xFFFF)
 		m_memory[addr] = data;
+	if (addr == 0xFF04)
+		m_memory[addr] = 0x00;
 }
 
 H_BYTE GameBoy::read(H_WORD addr)

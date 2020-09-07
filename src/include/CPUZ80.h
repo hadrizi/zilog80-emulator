@@ -105,6 +105,31 @@ public:
 	H_BYTE* IF = nullptr; // Interupt Request. Points to $FF0F. Determines which interupts are requested
 	/*
 		Timer
+		GameBoy has internal timer. It has nothing to do with CPU clock!!!
+		This timer consists of four parts
+		1. Timer itself     - TIMA at 0xFF05 memory address
+		2. Timer modula     - TMA  at 0xFF06 memory address
+		3. Timer controller - TAC  at 0xFF07 memory address
+		4. Divider			- DIV  at 0xFF04 memory address
+		
+		TAC determines if timer is enabled and with which frequency it updates
+			Bit 2 - Timer Enable
+					0: Disabled
+					1: Enabled
+			Bit 1+0 - Frequency
+					00: 4096    HZ - every 1024 CPU cycles
+					01: 2621444 HZ - every 16   CPU cycles
+					10: 65536   HZ - every 64   CPU cycles
+					11: 16384   HZ - every 256  CPU cycles
+
+		TIMA increments every frequency cycle and goes from $00 to $FF
+		and when it overflows it resets to the value stored at TMA
+		and requests Timer(0x04) interrupt.
+
+		Divider is simmilar to TIMA it goes from $00 to $FF, too.
+		However, it increments at fixed rate of 16384 Hz(every 256 CPU cycles).
+		If overflow happens it resets to zero. When CPU tries to write data to
+		DIV address it sets it to zero.
 	*/
 	struct
 	{
@@ -116,7 +141,7 @@ public:
 
 		inline void reset() { (*TIMA) = (*TMA); }
 	} clock;
-
+	H_BYTE* DIV = nullptr;
 
 private:
 	// Interrupt bits
@@ -135,7 +160,8 @@ private:
 	H_BYTE  opcode        = 0x00;    // Instruction byte
 	H_BYTE  cycles        = 0;	     // Counts how many cycles has remaining
 	H_DWORD clock_count   = 0;       // Counts how many cycles have passed. Emulator doesn't use it's only foe debugging
-	int     timer_count   = 0;       // Counts how many cycles have passed. Used to proceed timer
+	H_WORD  timer_count   = 0;       // Counts how many cycles have passed. Used to proceed timer
+	H_WORD  divider_count = 0;       // Counts how many cycles have passed. Used to proceed divider
 
 	// GameBoy instance
 	GameBoy* gb = nullptr;
@@ -217,6 +243,8 @@ private:
 	void CPU_TIMER_CHECK();							     // Checks timer for overflow
 	H_BYTE CPU_TIMER_BIT();							     // Returns TAC frequency bit
 	void CPU_TIMER_FREQ();								 // Sets timer frequency
+	void CPU_DIVIDER_INCREMENT();						 // Increments divider
+
 
 	/* 
 		Data Functions

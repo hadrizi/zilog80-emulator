@@ -1,6 +1,8 @@
 #include "CPUZ80.h"
 #include "GameBoy.h"
 
+#define GB_CPU_DEBUG
+
 CPUZ80::CPUZ80()
 {
 	using h = CPUZ80;
@@ -225,7 +227,15 @@ H_BYTE* CPUZ80::read_ptr(Register addr)
 void CPUZ80::timer_update()
 {
 	timer_count++;
+	divider_count++;
+#ifdef GB_CPU_DEBUG
+	std::cout << "Timer count >> " << timer_count << std::endl
+		<< "Divider count >> " << divider_count << std::endl
+		<< std::endl;
+#endif // GB_CPU_DEBUG
+
 	CPU_TIMER_INCREMENT();
+	CPU_DIVIDER_INCREMENT();
 }
 
 void CPUZ80::reset()
@@ -256,9 +266,11 @@ void CPUZ80::reset()
 	IE = read_ptr(0xFFFF);
 	IF = read_ptr(0xFF0F);
 
+	// Timers
 	clock.TIMA = read_ptr(0xFF05);
 	clock.TMA  = read_ptr(0xFF06);
 	clock.TAC  = read_ptr(0xFF07);
+	DIV        = read_ptr(0xFF04);
 
 	CPU_TIMER_FREQ();
 }
@@ -836,8 +848,6 @@ void CPUZ80::CPU_PUSH_16(H_WORD data)
 	H_BYTE lo = (data & 0x00FF);
 	write(SP - 1, lo);
 
-	std::cout << (int)hi << (int)lo << " " << (int) data << std::endl;
-
 	dec_SP(2);
 }
 
@@ -948,6 +958,15 @@ void CPUZ80::CPU_TIMER_INCREMENT()
 
 			CPU_TIMER_CHECK();
 		}
+	}
+}
+
+void CPUZ80::CPU_DIVIDER_INCREMENT()
+{
+	if (divider_count >= 255)
+	{
+		divider_count = 0;
+		(*DIV)++;
 	}
 }
 

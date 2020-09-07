@@ -95,13 +95,16 @@ void Debugger::draw_cpu_special(int x, int y)
 	DrawString(x, y + 40, "TIMER:", ((*gb->cpu.clock.TAC) & 0x04) > 0 ? olc::WHITE : olc::RED);
 	DrawString(x + 86, y + 40, "$" + hex((*gb->cpu.clock.TIMA), 2));
 
-	DrawString(x, y + 50, "FREQUENCY:");
+	DrawString(x, y + 50, "DIVIDER:");
+	DrawString(x + 86, y + 50, "$" + hex((*gb->cpu.DIV), 2));
+
+	DrawString(x, y + 60, "FREQUENCY:");
 	switch ((*gb->cpu.clock.TAC) & 0x03)
 	{
-	case 0x00: DrawString(x + 86, y + 50, "1024"); break;
-	case 0x01: DrawString(x + 86, y + 50, "16"); break;
-	case 0x02: DrawString(x + 86, y + 50, "64"); break;
-	case 0x03: DrawString(x + 86, y + 50, "256"); break;
+	case 0x00: DrawString(x + 86, y + 60, "1024"); break;
+	case 0x01: DrawString(x + 86, y + 60, "16"); break;
+	case 0x02: DrawString(x + 86, y + 60, "64"); break;
+	case 0x03: DrawString(x + 86, y + 60, "256"); break;
 	default:
 		break;
 	}

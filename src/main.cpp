@@ -10,7 +10,6 @@ int main(int argc, char** argv)
 	//Cartridge c("C:\\personal\\8bitgames\\GB\\Tetris.gb");
 	//gb->cartrdige_loader.load_cartridge(c);
 
-	std::cout << (1u << 9) << std::endl;
 	gb->debugger.Construct(680, 480, 2, 2);
 	gb->debugger.Start();
 
