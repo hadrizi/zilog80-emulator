@@ -19,9 +19,10 @@ struct ScreenData : public Color
 	using Color::Color;
 };
 
-const ScreenData whitePixel = ScreenData(0xFF, 0xFF, 0xFF);
-const ScreenData blackPixel = ScreenData(0x00, 0x00, 0x00);
-const ScreenData greyPixel  = ScreenData(0x7F, 0x7F, 0x7F);
+const ScreenData whitePixel     = ScreenData(0xE0, 0xF8, 0xD0);
+const ScreenData lightGreyPixel = ScreenData(0xCC, 0xCC, 0xCC);
+const ScreenData darkGreyPixel  = ScreenData(0x77, 0x77, 0x77);
+const ScreenData blackPixel     = ScreenData(0x00, 0x00, 0x00);
 
 class Screen
 {

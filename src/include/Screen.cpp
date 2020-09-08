@@ -22,6 +22,16 @@ Screen::Screen()
 	);
 
 	m_screen = SDL_GetWindowSurface(m_window);
+
+	SDL_FillRect(m_screen, NULL, SDL_MapRGB
+	(
+		m_screen->format,
+		whitePixel.r,
+		whitePixel.g,
+		whitePixel.b
+	));
+
+	SDL_UpdateWindowSurface(m_window);
 }
 
 Screen::~Screen()

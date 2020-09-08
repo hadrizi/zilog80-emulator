@@ -211,6 +211,14 @@ public:
 								// Bit 0: Backgound and Window display
 								//		 0: off
 								//		 1: on
+		H_BYTE* SCY = nullptr;  // FF42. Scroll Y
+								// Background Y screen position
+		H_BYTE* SCX = nullptr;  // FF43. Scroll X
+								// Background X screen position
+		H_BYTE* WY  = nullptr;  // FF4A. Window Y position
+								// 0 <= WY <= 143
+		H_BYTE* WX  = nullptr;  // FF4B. Scroll X
+								// 0 <= WY <= 166
 
 		Screen* s = nullptr;
 		inline bool enabled() { return ((*LCDC) & (1u << 7)) > 0 ? true : false; }
@@ -358,7 +366,11 @@ private:
 		These functions provides interface to manipulate the screen	
 	*/
 	
-	void LCD_SET_STATUS();	// Updates LCD status according to current cycle
+	void LCD_SET_STATUS();	                  // Updates LCD status according to current cycle
+	void LCD_DRAW_LINE();	                  // Renders current line
+	void LCD_RENDER_TILES();                  // Renders current line
+	void LCD_RENDER_SPRITES();                // Renders current line
+	ScreenData LCD_GET_COLOR(H_BYTE, H_WORD); // Returns color according to the palette
 
 	/* 
 		Data Functions

@@ -54,7 +54,7 @@ CPUZ80::~CPUZ80()
 
 void CPUZ80::connect_device(GameBoy* instance)
 {
-	gb = instance; 
+	gb = instance;
 	LCD.s = &instance->screen;
 }
 
@@ -262,7 +262,7 @@ void CPUZ80::update_LCD()
 			(*LCD.LY) = 0;
 		else if ((*LCD.LY) < (LCD.scanlines - LCD.invisible_scanlines))
 		{
-			// TODO Draw Scanline
+			LCD_DRAW_LINE();
 		}
 
 	}
@@ -270,27 +270,36 @@ void CPUZ80::update_LCD()
 
 void CPUZ80::reset()
 {
-	write(0xFF05, 0x00);
-	write(0xFF06, 0x00);
-	write(0xFF07, 0x00);
-	write(0xFFFF, 0x00);
-	write(0xFF40, 0x91);
+	write(0xFF05, 0x00); // TIMA
+	write(0xFF06, 0x00); // TMA
+	write(0xFF07, 0x00); // TAC
+
+	write(0xFF40, 0x91); // LCDC
+	write(0xFF42, 0x00); // SCY
+	write(0xFF43, 0x00); // SCX
+	write(0xFF45, 0x00); // LYC
+	write(0xFF47, 0xFC); // BGP
+	write(0xFF48, 0xFF); // OBP 0
+	write(0xFF49, 0xFF); // OBP 1
+	write(0xFF4A, 0x00); // WY
+	write(0xFF4B, 0x00); // WX
+
+	write(0xFFFF, 0x00); // IE
 
 	//write(0x0060, 0xD9);
 	//write(0x0040, 0xD9);
-	write(0xFF41, 0xFC);
+	//write(0xFF41, 0xFC);
 	//write(0xFF44, 0x8F);
 	gb->m_memory[0xFF44] = 0x8F;
 
-	//AF = 0x01B0;
-	//BC = 0x0013;
-	//DE = 0x00D8;
-	//HL = 0x014D;
-	AF    = 0x00B0;
-	BC    = 0x0000;
-	DE    = 0x0000;
-	//HL    = 0xCAFE;
-	HL    = 0x0000;
+	AF = 0x01B0;
+	BC = 0x0013;
+	DE = 0x00D8;
+	HL = 0x014D;
+	//AF    = 0x00B0;
+	//BC    = 0x0000;
+	//DE    = 0x0000;
+	//HL    = 0x0000;
 	SP    = 0xFFFF;
 	PC    = 0x0100;
 
@@ -312,6 +321,10 @@ void CPUZ80::reset()
 	LCD.LYC  = read_ptr(0xFF44);
 	LCD.STAT = read_ptr(0xFF41);
 	LCD.LCDC = read_ptr(0xFF40);
+	LCD.SCY  = read_ptr(0xFF42);
+	LCD.SCX  = read_ptr(0xFF43);	
+	LCD.WY   = read_ptr(0xFF4A);
+	LCD.WX   = read_ptr(0xFF4B);
 
 	counters.reset();
 }
@@ -1083,6 +1096,104 @@ void CPUZ80::LCD_SET_STATUS()
 	}
 	else
 		CPU_RESET_BIT(LCD.STAT, 2);
+}
+
+void CPUZ80::LCD_DRAW_LINE()
+{
+	if (CPU_TEST_BIT((*LCD.LCDC), 0))
+		LCD_RENDER_TILES();
+	if (CPU_TEST_BIT((*LCD.LCDC), 1))
+		LCD_RENDER_SPRITES();
+}
+
+void CPUZ80::LCD_RENDER_TILES()
+{
+	bool window = CPU_TEST_BIT((*LCD.LCDC), 5) && ((*LCD.WY) < (*LCD.LY));
+	bool unsig  = CPU_TEST_BIT((*LCD.LCDC), 4);
+
+	H_WORD tile_data = CPU_TEST_BIT((*LCD.LCDC), 4) ? 0x8000 : 0x8800;
+	H_WORD mem_area = 0;
+
+	if (window)
+		mem_area = CPU_TEST_BIT((*LCD.LCDC), 6) ? 0x9C00 : 0x9800;
+	else
+		mem_area = CPU_TEST_BIT((*LCD.LCDC), 3) ? 0x9C00 : 0x9800;
+
+	H_BYTE ypos = window ? ((*LCD.LY) - (*LCD.WY)) : ((*LCD.SCY) - (*LCD.LY));
+
+	H_WORD row = ((H_BYTE)(ypos / 8)) * 32;
+	for (int pixel = 0; pixel < 160; pixel++)
+	{
+		H_BYTE xpos = (window && (pixel >= (*LCD.WX) - 7)) ? pixel - (*LCD.WX) - 7 : pixel + (*LCD.SCX);
+		H_WORD col = (xpos / 8);
+		H_S_WORD num;
+
+		H_WORD addr = mem_area + row + col;
+		num = unsig ? (H_BYTE)read(addr) : (H_S_BYTE)read(addr);
+
+		H_WORD location = tile_data;
+		location += unsig ? (num * 16) : ((num + 128) * 16);
+
+		H_BYTE line = ypos % 8;
+		line *= 2;
+		H_BYTE byte1 = read(location + line);
+		H_BYTE byte2 = read(location + line + 1);
+		
+		int color_bit = xpos % 8;
+		color_bit -= 7;
+		color_bit *= -1;
+
+		int color_num = byte2 & (1 << color_bit) ? 1 : 0;
+		color_num <<= 1;
+		color_num |= byte1 & (1 << color_bit) ? 1 : 0;
+
+		ScreenData color = LCD_GET_COLOR(color_num, 0xFF47);
+
+		if (((*LCD.LY) < 0) || ((*LCD.LY) > 143) || (pixel < 0) || (pixel > 159))
+			continue;
+
+		gb->screen.set_pixel(pixel, (*LCD.LY), color);
+	}
+}
+
+void CPUZ80::LCD_RENDER_SPRITES()
+{
+
+}
+
+ScreenData CPUZ80::LCD_GET_COLOR(H_BYTE num, H_WORD addr)
+{
+	ScreenData res = whitePixel;
+	H_BYTE palette = read(addr);
+
+	int hi = 0;
+	int lo = 0;
+
+	switch (num)
+	{
+	case 0: hi = 1; lo = 0; break;
+	case 1: hi = 3; lo = 2; break;
+	case 2: hi = 5; lo = 4; break;
+	case 3: hi = 7; lo = 6; break;
+	default:
+		break;
+	}
+
+	int color = 0;
+	color  = (palette & (1 << hi)) << 1;
+	color |= (palette & (1 << lo));
+
+	switch (color)
+	{
+	case 0: res = whitePixel;     break;
+	case 1: res = lightGreyPixel; break;
+	case 2: res = darkGreyPixel;  break;
+	case 3: res = blackPixel;     break;
+	default:
+		break;
+	}
+
+	return res;
 }
 
 // 8-BIT LOAD FUNCTIONS
