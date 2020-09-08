@@ -1,8 +1,6 @@
 #include "CPUZ80.h"
 #include "GameBoy.h"
 
-#define GB_CPU_DEBUG
-
 CPUZ80::CPUZ80()
 {
 	using h = CPUZ80;
@@ -24,7 +22,7 @@ CPUZ80::CPUZ80()
 /*B0*/	{"OR",		&h::OR,	     &h::db,	  4}, {"OR",      &h::OR,	   &h::dc,		 4}, {"OR",		  &h::OR,		  &h::dd,	    4}, {"OR",		&h::OR,	     &h::de,	   4}, {"OR",	   &h::OR,		&h::dh,		  4}, {"OR",      &h::OR,	   &h::dl,	 4}, {"OR",      &h::OR,	  &h::mhl,	   8}, {"OR",	   &h::OR,	    &h::da,	   4}, {"CP",      &h::CP,		&h::db,		 4}, {"CP",		&h::CP,		&h::dc,	  4}, {"CP",	  &h::CP,	   &h::dd,		 4}, {"CP",			&h::CP,		&h::de,	     4}, {"CP",		&h::CP,		&h::dh,		  4}, {"CP",	&h::CP,    &h::dl,		 4}, {"CP",	   &h::CP,   &h::mhl,	 8}, {"CP",		 &h::CP,	 &h::da,	4}, /*B0*/
 /*C0*/	{"RET NZ",	&h::RET_NZ,  &h::dnop,	  8}, {"POP",	  &h::POP,	   &h::dbc,		12}, {"JP NZ",	  &h::JPNZ,		  &h::dimm_16, 12}, {"JP",		&h::JP,	     &h::dimm_16, 12}, {"CALL NZ", &h::CALL_NZ,	&h::dimm_16, 12}, {"PUSH",    &h::PUSH,	   &h::dbc, 16}, {"ADD A",   &h::ADD_A,	  &h::dimm_8,  8}, {"RST $00", &h::RST_00,  &h::dnop, 32}, {"RET Z",   &h::RET_Z,	&h::dnop,	 8}, {"RET",	&h::RET,	&h::dnop, 8}, {"JP Z",	  &h::JPZ,	   &h::dimm_16, 12}, {"PREFIX $CB", &h::PREFIX, &h::dimm_8,  4}, {"CALL Z", &h::CALL_Z, &h::dimm_16, 12}, {"CALL",  &h::CALL,  &h::dimm_16, 12}, {"ADC A", &h::ADC,  &h::dimm_8, 8}, {"RST $08", &h::RST_08, &h::dnop, 32}, /*C0*/
 /*D0*/	{"RET NC",	&h::RET_NC,  &h::dnop,	  8}, {"POP",	  &h::POP,	   &h::dde,		12}, {"JP NC",	  &h::JPNC,		  &h::dimm_16, 12}, {"???",		&h::XXX,	 &h::dnop,	  00}, {"CALL NC", &h::CALL_NC,	&h::dimm_16, 12}, {"PUSH",    &h::PUSH,	   &h::dde,	16}, {"SUB",     &h::SUB,	  &h::dimm_8,  8}, {"RST $10", &h::RST_10,  &h::dnop, 32}, {"RET C",   &h::RET_C,	&h::dnop,	 8}, {"RETI",	&h::RETI,	&h::dnop, 8}, {"JP D",	  &h::JPC,	   &h::dimm_16, 12}, {"???",		&h::XXX,	&h::dnop,   00}, {"CALL C", &h::CALL_C, &h::dimm_16, 12}, {"???",	&h::XXX,   &h::dnop,	00}, {"SBC A", &h::SBC,  &h::dimm_8, 8}, {"RST $18", &h::RST_18, &h::dnop, 32}, /*D0*/
-/*E0*/	{"LDH (n)", &h::LDH_M,	 &h::da,	 12}, {"POP",	  &h::POP,	   &h::dhl,		12}, {"LD (C)",	  &h::LD_M_FFFOC, &h::da,	    8}, {"???",		&h::XXX,	 &h::dnop,	  00}, {"???",     &h::XXX,		&h::dnop,	 00}, {"PUSH",    &h::PUSH,	   &h::dhl, 16}, {"AND",     &h::AND,	  &h::dimm_8,  8}, {"RST $20", &h::RST_20,  &h::dnop, 32}, {"ADD SP",  &h::ADD_SP,	&h::dimm_8, 16}, {"JP",		&h::JP,		&h::dhl,  4}, {"LD",	  &h::LD_M_NN, &h::da,		16}, {"???",		&h::XXX,	&h::dnop,   00}, {"???",    &h::XXX,	&h::dnop,	 00}, {"???",	&h::XXX,   &h::dnop, 	00}, {"XOR",   &h::XOR,  &h::dimm_8, 8}, {"RST $28", &h::RST_28, &h::dnop, 32}, /*E0*/
+/*E0*/	{"LDH",     &h::LDH_M,	 &h::da,	 12}, {"POP",	  &h::POP,	   &h::dhl,		12}, {"LD (C)",	  &h::LD_M_FFFOC, &h::da,	    8}, {"???",		&h::XXX,	 &h::dnop,	  00}, {"???",     &h::XXX,		&h::dnop,	 00}, {"PUSH",    &h::PUSH,	   &h::dhl, 16}, {"AND",     &h::AND,	  &h::dimm_8,  8}, {"RST $20", &h::RST_20,  &h::dnop, 32}, {"ADD SP",  &h::ADD_SP,	&h::dimm_8, 16}, {"JP",		&h::JP,		&h::dhl,  4}, {"LD",	  &h::LD_M_NN, &h::da,		16}, {"???",		&h::XXX,	&h::dnop,   00}, {"???",    &h::XXX,	&h::dnop,	 00}, {"???",	&h::XXX,   &h::dnop, 	00}, {"XOR",   &h::XOR,  &h::dimm_8, 8}, {"RST $28", &h::RST_28, &h::dnop, 32}, /*E0*/
 /*F0*/	{"LDH A",	&h::LD_A,	 &h::mFF00n, 12}, {"POP",	  &h::POP,	   &h::daf,		12}, {"LD A",	  &h::LD_A,		  &h::mFF00c,   8}, {"DI",		&h::DI,	     &h::dnop,	   4}, {"???",     &h::XXX,		&h::dnop,	 00}, {"PUSH",    &h::PUSH,	   &h::daf, 16}, {"OR",      &h::OR,	  &h::dimm_8,  8}, {"RST $30", &h::RST_30,  &h::dnop, 32}, {"LDHL",    &h::LDHL,	&h::dspn,	12}, {"LD SP",	&h::LD_SP,  &h::dhl,  8}, {"LD A",	  &h::LD_A,	   &h::mimm_16, 16}, {"EI",			&h::EI,		&h::dnop,    4}, {"???",    &h::XXX,	&h::dnop,	 00}, {"???",	&h::XXX,   &h::dnop,	00}, {"CP",	   &h::CP,   &h::dimm_8, 8}, {"RST $38", &h::RST_38, &h::dnop, 32}  /*F0*/
 	};	
 	prefixes =
@@ -52,6 +50,12 @@ CPUZ80::CPUZ80()
 CPUZ80::~CPUZ80()
 {
 
+}
+
+void CPUZ80::connect_device(GameBoy* instance)
+{
+	gb = instance; 
+	LCD.s = &instance->screen;
 }
 
 std::map<H_WORD, std::string> CPUZ80::disassemble(H_WORD start, H_WORD stop)
@@ -87,6 +91,12 @@ std::map<H_WORD, std::string> CPUZ80::disassemble(H_WORD start, H_WORD stop)
 			hi = gb->read(addr);
 			addr++;
 			line_str += "($" + hex(hi, 2) + hex(lo, 2) + ") ";
+		}
+		else if (opcodes[d_opcode].op_func == &CPUZ80::LDH_M)
+		{
+			val = gb->read(addr);
+			addr++;
+			line_str += "($FF00 + $" + hex(val, 2) + ") ";
 		}
 
 		if (opcodes[d_opcode].data_func == &CPUZ80::dimm_8)
@@ -224,18 +234,38 @@ H_BYTE* CPUZ80::read_ptr(Register addr)
 	return gb->read_ptr(addr.reg);
 }
 
-void CPUZ80::timer_update()
+void CPUZ80::update_timers()
 {
-	timer_count++;
-	divider_count++;
-#ifdef GB_CPU_DEBUG
-	std::cout << "Timer count >> " << timer_count << std::endl
-		<< "Divider count >> " << divider_count << std::endl
-		<< std::endl;
-#endif // GB_CPU_DEBUG
+	//counters.timer_count++;
+	//counters.divider_count++;
 
 	CPU_TIMER_INCREMENT();
 	CPU_DIVIDER_INCREMENT();
+}
+
+void CPUZ80::update_LCD()
+{
+	LCD_SET_STATUS();
+
+	if (!LCD.enabled())
+		return;
+
+	if (counters.scanline_count >= LCD.frequency)
+	{
+		(*LCD.LY)++;
+
+		counters.scanline_count = 0;
+
+		if ((*LCD.LY) == (LCD.scanlines - LCD.invisible_scanlines))
+			CPU_REQUEST_INT(INT_VBlank);
+		else if ((*LCD.LY) > LCD.scanlines)
+			(*LCD.LY) = 0;
+		else if ((*LCD.LY) < (LCD.scanlines - LCD.invisible_scanlines))
+		{
+			// TODO Draw Scanline
+		}
+
+	}
 }
 
 void CPUZ80::reset()
@@ -244,9 +274,13 @@ void CPUZ80::reset()
 	write(0xFF06, 0x00);
 	write(0xFF07, 0x00);
 	write(0xFFFF, 0x00);
+	write(0xFF40, 0x91);
 
 	//write(0x0060, 0xD9);
 	//write(0x0040, 0xD9);
+	write(0xFF41, 0xFC);
+	//write(0xFF44, 0x8F);
+	gb->m_memory[0xFF44] = 0x8F;
 
 	//AF = 0x01B0;
 	//BC = 0x0013;
@@ -271,8 +305,15 @@ void CPUZ80::reset()
 	clock.TMA  = read_ptr(0xFF06);
 	clock.TAC  = read_ptr(0xFF07);
 	DIV        = read_ptr(0xFF04);
-
 	CPU_TIMER_FREQ();
+
+	// LCD
+	LCD.LY   = read_ptr(0xFF44);
+	LCD.LYC  = read_ptr(0xFF44);
+	LCD.STAT = read_ptr(0xFF41);
+	LCD.LCDC = read_ptr(0xFF40);
+
+	counters.reset();
 }
 
 bool CPUZ80::complete()
@@ -295,11 +336,23 @@ void CPUZ80::cpu_clock()
 		(this->*opcodes[opcode].op_func)();
 	}	
 
-	clock_count++;
+	counters.inc();
 	cycles--;
 
 	CPU_PERFORM_INT();
-	timer_update();
+	update_timers();
+	update_LCD();
+
+#ifdef GB_CPU_DEBUG
+	counters.log();
+#endif // GB_CPU_DEBUG
+}
+
+void CPUZ80::DMA(H_BYTE data)
+{
+	H_WORD addr = data << 8;
+	for (int i = 0; i < 0xA0; ++i)
+		write(0xFE00 + i, read(addr));
 }
 
 // Returns current F register bit status
@@ -906,9 +959,9 @@ void CPUZ80::CPU_PENDING_IME()
 	}
 }
 
-void CPUZ80::CPU_REQUEST_INT(size_t bit)
+void CPUZ80::CPU_REQUEST_INT(size_t INT)
 {
-	CPU_SET_BIT(IF, bit);
+	CPU_SET_BIT(IF, INT);
 }
 
 void CPUZ80::CPU_CLOCK_INCREMENT()
@@ -949,12 +1002,12 @@ void CPUZ80::CPU_TIMER_INCREMENT()
 {
 	if ((*clock.TAC) & 0x04)
 	{
-		if (timer_count >= clock.frequency)
+		if (counters.timer_count >= clock.frequency)
 		{
 			clock.overflow = (*clock.TIMA) == 0xFF;
 
 			(*clock.TIMA) += 1;
-			timer_count = 0;
+			counters.timer_count = 0;
 
 			CPU_TIMER_CHECK();
 		}
@@ -963,11 +1016,73 @@ void CPUZ80::CPU_TIMER_INCREMENT()
 
 void CPUZ80::CPU_DIVIDER_INCREMENT()
 {
-	if (divider_count >= 255)
+	if (counters.divider_count >= 255)
 	{
-		divider_count = 0;
+		counters.divider_count = 0;
 		(*DIV)++;
 	}
+}
+
+// LCD FUNCTIONS
+
+void CPUZ80::LCD_SET_STATUS()
+{
+	if (!LCD.enabled())
+	{
+		counters.scanline_count = 0;
+		LCD.reset();
+		return;
+	}
+
+	H_BYTE current_mode = (*LCD.STAT) & 0x03;
+	H_BYTE mode = 0;
+	bool   irq = false;
+
+	if ((*LCD.LY) >= 144)
+	{
+		mode = 1;
+		CPU_SET_BIT(LCD.STAT, 0);
+		CPU_RESET_BIT(LCD.STAT, 1);
+		irq = CPU_TEST_BIT((*LCD.STAT), 4);
+	}
+	else
+	{
+		if (counters.scanline_count >= 0 && counters.scanline_count < 80)
+		{
+			mode = 2;
+			CPU_RESET_BIT(LCD.STAT, 0);
+			CPU_SET_BIT(LCD.STAT, 1);
+			irq = CPU_TEST_BIT((*LCD.STAT), 5);
+		}
+		if (counters.scanline_count >= 80 && counters.scanline_count < 172)
+		{
+			mode = 3;
+			CPU_SET_BIT(LCD.STAT, 0);
+			CPU_SET_BIT(LCD.STAT, 1);
+			irq = false;
+		}
+		if (counters.scanline_count >= 172)
+		{
+			mode = 0;
+			CPU_RESET_BIT(LCD.STAT, 0);
+			CPU_RESET_BIT(LCD.STAT, 1);
+			irq = CPU_TEST_BIT((*LCD.STAT), 3);
+		}
+	}
+
+	// Check if we just switched modes
+	if (irq && (mode != current_mode))
+		CPU_REQUEST_INT(INT_LCD);
+
+	// Coincidence flag
+	if ((*LCD.LY) == (*LCD.LYC))
+	{
+		CPU_SET_BIT(LCD.STAT, 2);
+		if (CPU_TEST_BIT((*LCD.STAT), 6))
+			CPU_REQUEST_INT(INT_LCD);
+	}
+	else
+		CPU_RESET_BIT(LCD.STAT, 2);
 }
 
 // 8-BIT LOAD FUNCTIONS
@@ -1586,7 +1701,7 @@ void CPUZ80::JPC()
 // Actually it adds fetched data to PC
 void CPUZ80::JR()
 {
-	PC = (PC - 2) + (H_S_BYTE)(*fetched8_ptr);
+	PC = (PC) + (H_S_BYTE)(*fetched8_ptr);
 }
 
 // Jumps to current address + fetched data if Z is reset
@@ -1594,7 +1709,7 @@ void CPUZ80::JR()
 void CPUZ80::JRNZ()
 {
 	if(get_flag(Z) == 0)
-		PC = (PC - 2) + (H_S_BYTE)(*fetched8_ptr);
+		PC = (PC) + (H_S_BYTE)(*fetched8_ptr);
 }
 
 // Jumps to current address + fetched data if Z is set
@@ -1602,7 +1717,7 @@ void CPUZ80::JRNZ()
 void CPUZ80::JRZ()
 {
 	if (get_flag(Z) == 1)
-		PC = (PC - 2) + (H_S_BYTE)(*fetched8_ptr);
+		PC = (PC) + (H_S_BYTE)(*fetched8_ptr);
 }
 
 // Jumps to current address + fetched data if C is reset
@@ -1610,14 +1725,14 @@ void CPUZ80::JRZ()
 void CPUZ80::JRNC()
 {
 	if (get_flag(C) == 0)
-		PC = (PC - 2) + (H_S_BYTE)(*fetched8_ptr);
+		PC = (PC ) + (H_S_BYTE)(*fetched8_ptr);
 }
 // Jumps to current address + fetched data if C is set
 // Actually it adds fetched data to PC
 void CPUZ80::JRC()
 {
 	if (get_flag(C) == 1)
-		PC = (PC - 2) + (H_S_BYTE)(*fetched8_ptr);
+		PC = (PC) + (H_S_BYTE)(*fetched8_ptr);
 }
 
 // Jumps to the fetched data

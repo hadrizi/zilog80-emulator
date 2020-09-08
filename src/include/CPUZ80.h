@@ -1,11 +1,13 @@
 #pragma once
 #define CLOCKSPEED 4194304 // 4.194304 MHz as stated in the technical documentaion
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <map>
 
 #include "core.h"
+#include "Screen.h"
 
 class GameBoy;
 
@@ -15,11 +17,25 @@ public:
 	CPUZ80();
 	~CPUZ80();
 
-	inline void connect_device(GameBoy* instance) { gb = instance; };
-	void cpu_clock();
+	// This function is used to build interface to GAmeBoy itself and get access to other hardware
+	// like screen or memory
+	void connect_device(GameBoy* instance);
+
+	// This function is not used in emulation< it is just for debugging purpose
+	// Constructs a map of command strings
 	std::map<H_WORD, std::string> disassemble(H_WORD, H_WORD);
-	void reset(); // Resets CPU according to documentation
+
+	// One CPU clock
+	void cpu_clock();
+	
+	// Resets CPU according to documentation
+	void reset(); 
+
+	// Checks if all desired cycles passed
 	bool complete();
+	
+	// Direct Memory Access Transfer
+	void DMA(H_BYTE);
 public:
 	/*
 		FLAGS
@@ -133,25 +149,83 @@ public:
 	*/
 	struct
 	{
-		H_BYTE* TIMA = nullptr; // FF05
-		H_BYTE* TMA = nullptr; // FF06
-		H_BYTE* TAC = nullptr; // FF07
+		H_BYTE* TIMA  = nullptr; // FF05
+		H_BYTE* TMA   = nullptr; // FF06
+		H_BYTE* TAC   = nullptr; // FF07
 		bool overflow = false;
 		int frequency = 1024;
 
 		inline void reset() { (*TIMA) = (*TMA); }
 	} clock;
-	H_BYTE* DIV = nullptr;
+	H_BYTE* DIV = nullptr; // FF04
+
+	/*
+		LCD
+
+		If (*LY) is 144 it is time to VBlank(0x00) interrupt
+	*/
+	struct {
+		const int scanlines = 153;
+		const int invisible_scanlines = 9;
+		const int frequency = 456;
+
+		H_BYTE* LY   = nullptr; // FF44. Read operations sets to zero
+		H_BYTE* LYC  = nullptr; // FF45
+		H_BYTE* STAT = nullptr; // FF41. LCD status
+								// Bits 6-3 - Interrupt section, 6th bit is LYC=LY
+								// Bit 5 - Mode 10
+								// Bit 4 - Mode 01
+								// Bit 3 - Mode 00
+								//		0: Non Selection
+								//		1: Selection
+								// Bit 2 - Coincidence Flag
+								//		0: LYC != LY
+								//		1: LYC == LY
+								// Bit 1-0 - Mode Flag
+								//		00: H-Blank
+								//		01: V-Blank
+								//		10: Search RAM for Sprites
+								//		11: Transfering data to LCD driver
+		H_BYTE* LCDC = nullptr; // FF40. $91 on reset
+								// Bit 7: Control mode
+								//		 0: Disable
+								//		 1: Enable
+								// Bit 6: Window tile map display select
+								//		 0: &9800-$9BFF
+								//		 1: &9C00-$9FFF
+								// Bit 5: Window display
+								//		 0: off
+								//		 1: on
+								// Bit 4: Backgound and Window Tile data select
+								//		 0: $8800-$97FF
+								//		 1: $8000-$8FFF <- Same area as OBJ
+								// Bit 3: Backgound tile map display select
+								//		 0: $9800-$9BFF
+								//		 1: $9C00-$9FFF
+								// Bit 2: Sprite(OBJ) size (WIDTH x HEIGHT)
+								//		 0: 8 x 8
+								//		 1: 8 x 16
+								// Bit 1: Sprite(OBJ) dislay
+								//		 0: off
+								//		 1: on
+								// Bit 0: Backgound and Window display
+								//		 0: off
+								//		 1: on
+
+		Screen* s = nullptr;
+		inline bool enabled() { return ((*LCDC) & (1u << 7)) > 0 ? true : false; }
+		inline void reset() { (*LY) = 0; (*STAT) &= 0xFC; (*STAT) |= 1 << 0; }
+	} LCD;
 
 private:
 	// Interrupt bits
 	enum
 	{
-		INT_VBlank = 0x01, // Bit 0
-		INT_LCD    = 0x02, // Bit 1
-		INT_Timer  = 0x04, // Bit 2
-		INT_Serial = 0x08, // Bit 3
-		INT_Joypad = 0x10, // Bit 4
+		INT_VBlank = 0, // Bit 0
+		INT_LCD    = 1, // Bit 1
+		INT_Timer  = 2, // Bit 2
+		INT_Serial = 3, // Bit 3
+		INT_Joypad = 4, // Bit 4
 	};
 
 	H_BYTE* fetched8_ptr  = nullptr; // This custom register is used by Data Functions to store 8-bit fetched data
@@ -159,9 +233,41 @@ private:
 	H_WORD  temp		  = 0x0000;  // A buffer register. Just for case
 	H_BYTE  opcode        = 0x00;    // Instruction byte
 	H_BYTE  cycles        = 0;	     // Counts how many cycles has remaining
-	H_DWORD clock_count   = 0;       // Counts how many cycles have passed. Emulator doesn't use it's only foe debugging
-	H_WORD  timer_count   = 0;       // Counts how many cycles have passed. Used to proceed timer
-	H_WORD  divider_count = 0;       // Counts how many cycles have passed. Used to proceed divider
+	
+	// Counters are not a part of CPU, their purpose is to track cycles
+	// for different parts of emulatoin so CPU and other hadrdware
+	// work synchronous
+	struct {
+		H_DWORD clock_count    = 0; // Counts how many cycles have passed. Emulator doesn't use it's only for debugging
+		H_WORD  timer_count    = 0; // Counts how many cycles have passed. Used to proceed timer
+		H_WORD  divider_count  = 0; // Counts how many cycles have passed. Used to proceed divider
+		H_WORD  scanline_count = 0; // Counts how many cycles have passed. Used to draw LCD and determine its mode
+	
+		inline void inc()
+		{
+			clock_count++;
+			timer_count++;
+			divider_count++;
+			scanline_count++;
+		}
+
+		inline void reset()
+		{
+			clock_count = 0;
+			timer_count = 0;
+			divider_count = 0;
+			scanline_count = 0;
+		}
+
+		inline void log()
+		{
+			std::cout << "Global count >> " << clock_count << std::endl
+				<< "Timer count >> " << timer_count << std::endl
+				<< "Divider count >> " << divider_count << std::endl
+				<< "Scanline count >> " << scanline_count << std::endl
+				<< std::endl;
+		}
+	} counters;
 
 	// GameBoy instance
 	GameBoy* gb = nullptr;
@@ -188,7 +294,9 @@ private:
 	void set_flag(FLAGS, bool);
 	void reset_flag(FLAGS);
 
-	void timer_update();
+	// Update Functions
+	void update_timers();
+	void update_LCD();
 
 	inline void inc_PC(int k = 1) { PC = PC + 1 * k; }
 	inline void inc_SP(int k = 1) { SP = SP + 1 * k; }
@@ -245,6 +353,12 @@ private:
 	void CPU_TIMER_FREQ();								 // Sets timer frequency
 	void CPU_DIVIDER_INCREMENT();						 // Increments divider
 
+	/*
+		LCD Functions
+		These functions provides interface to manipulate the screen	
+	*/
+	
+	void LCD_SET_STATUS();	// Updates LCD status according to current cycle
 
 	/* 
 		Data Functions
